@@ -8,6 +8,7 @@
 #include <llvm/Support/raw_ostream.h>
 
 #include <string>
+#include <unordered_set>
 
 namespace lag {
 using namespace std::string_literals;
@@ -15,12 +16,40 @@ using namespace std::string_literals;
 constexpr auto builder = "builder";
 
 std::string get_type_str(const Type &type, StringRef ctx_name) {
+  std::string ret;
+  raw_string_ostream os(ret);
   switch (type.getTypeID()) {
   case Type::IntegerTyID: {
     auto num = cast<IntegerType>(&type)->getBitWidth();
-    return formatv("Type::getIntNTy({0}, {1})", ctx_name, num).str();
+    os << formatv("auto *type_{0} = Type::getIntNTy({1}, {2});\n", &type,
+                  ctx_name, num);
+    return ret;
+  }
+  case Type::VoidTyID:
+    os << formatv("auto *type_{0} = Type::getVoidTy({1});\n", &type, ctx_name);
+    return ret;
+  case Type::PointerTyID: {
+    auto *ptr_type = dyn_cast<PointerType>(&type);
+    assert(ptr_type);
+    os << formatv("auto *type_{0} = PointerType::get({1}, 0);\n", &type,
+                  ctx_name);
+    return ret;
+  }
+  case Type::ArrayTyID: {
+    auto *array_type = dyn_cast<ArrayType>(&type);
+    assert(array_type);
+    auto *elem_type = array_type->getElementType();
+    assert(elem_type);
+    auto num = array_type->getNumElements();
+    os << get_type_str(*elem_type, ctx_name);
+    os << formatv("auto *type_{0} = ArrayType::get(type_{1}, {2});\n", &type,
+                  elem_type, num);
+    return ret;
   }
   default:
+    errs() << "TYPE: ";
+    type.print(errs());
+    errs() << "\n";
     llvm_unreachable("Unsupported type encountered");
   }
 }
@@ -30,9 +59,11 @@ std::string get_ret_type(const Function &f) {
   assert(func_type);
   auto *ret_type = func_type->getReturnType();
   assert(ret_type);
-  return formatv("auto *ret_type_{0} = {1};\n", &f,
-                 get_type_str(*ret_type, "Ctx"))
-      .str();
+  std::string tp;
+  raw_string_ostream os(tp);
+  os << get_type_str(*ret_type, "Ctx");
+  os << formatv("auto *ret_type_{0} = type_{1};\n", &f, ret_type);
+  return tp;
 }
 
 std::string get_args_types(const Function &f) {
@@ -43,9 +74,8 @@ std::string get_args_types(const Function &f) {
   assert(func_type);
   for (auto *t : func_type->params()) {
     assert(t);
-    os << formatv("args_{0}.push_back({1});\n", f.getName(),
-                  get_type_str(*t, "Ctx"))
-              .str();
+    os << get_type_str(*t, "Ctx");
+    os << formatv("args_{0}.push_back(type_{1});\n", &f, t);
   }
   return create_args;
 }
@@ -134,8 +164,9 @@ void create_operand(const Value &v, unsigned idx, raw_ostream &os) {
 
 void create_phi_node(const PHINode &phi, raw_ostream &os) {
   auto num_incoming = phi.getNumIncomingValues();
-  os << formatv("auto *phi_ty_{0} = {1};\n", &phi,
-                get_type_str(*phi.getType(), "Ctx"));
+  auto *type = phi.getType();
+  os << get_type_str(*type, "Ctx");
+  os << formatv("auto *phi_ty_{0} = type_{1};\n", &phi, type);
   os << formatv("auto *phi_{0} = {1}.CreatePHI(phi_ty_{0}, {2}, \"\");\n", &phi,
                 builder, num_incoming);
   for (auto &&[idx, pair] :
@@ -144,6 +175,26 @@ void create_phi_node(const PHINode &phi, raw_ostream &os) {
     create_operand(*val.get(), idx, os);
     os << formatv("phi_{0}->addIncoming(op_{1}_{2}, bb_{3});\n", &phi, idx,
                   val.get(), &bb);
+  }
+}
+
+bool requires_special_handling(const Instruction &instr) {
+  return instr.getOpcode() == Instruction::Alloca;
+}
+
+void create_pre_args(const Instruction &instr, raw_ostream &os) {
+  switch (instr.getOpcode()) {
+  case Instruction::Alloca: {
+    auto *alloca = dyn_cast<AllocaInst>(&instr);
+    assert(alloca);
+    auto *allocated_type = alloca->getAllocatedType();
+    assert(allocated_type);
+    os << get_type_str(*allocated_type, "Ctx");
+    os << formatv("auto *add_arg_{0} = type_{1};\n", &instr, allocated_type);
+    break;
+  }
+  default:
+    llvm_unreachable("unknown special instr");
   }
 }
 
@@ -164,9 +215,14 @@ std::string create_instr(const Instruction &instr) {
     assert(val);
     create_operand(*val, idx, os);
   }
+  if (requires_special_handling(instr)) {
+    create_pre_args(instr, os);
+  }
   os << formatv("auto *instr_{0} = {1}.Create{2}(", &instr, builder,
                 get_instr_create_name(instr))
             .str();
+  if (requires_special_handling(instr))
+    os << formatv("add_arg_{0}, ", &instr);
   interleaveComma(map_range(enumerate(instr.operands()),
                             [](auto &&pair) {
                               auto &&[idx, op] = pair;
@@ -206,6 +262,14 @@ std::string create_func(const Function &f) {
 }
 
 PreservedAnalyses api_gen_pass::run(Function &f, FunctionAnalysisManager &) {
+  std::unordered_set<std::string> visited;
+  visited.insert(f.getName().str());
+  auto *m = f.getParent();
+  assert(m);
+  for (auto &ff : m->getFunctionList()) {
+    if (ff.getName() != f.getName() && !visited.contains(ff.getName().str()))
+      os << create_func(ff);
+  }
   os << create_func(f);
   return PreservedAnalyses::all();
 }
