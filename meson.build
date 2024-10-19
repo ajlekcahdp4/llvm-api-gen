@@ -5,3 +5,7 @@ project(
 )
 
 subdir('lib')
+
+llvm_dep = dependency('llvm')
+
+#executable('test-generated', 'tests/generated.cpp', dependencies: [llvm_dep])
