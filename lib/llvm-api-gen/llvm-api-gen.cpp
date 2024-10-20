@@ -17,12 +17,20 @@ using namespace std::string_literals;
 
 constexpr auto builder = "builder";
 
+template <typename value_type> const Value *get_value(const value_type &v) {
+  return static_cast<const Value *>(&v);
+}
+
 struct generation_context final {
   std::unordered_set<const Type *> defined_types;
   std::unordered_map<const Value *, unsigned> defined_values;
   std::unordered_map<const PHINode *, const Instruction *> phis;
+  template <typename value_type> unsigned get_value_idx(const value_type &val) {
+    auto [it, inserted] =
+        defined_values.try_emplace(get_value(val), defined_values.size());
+    return it->second;
+  }
 };
-
 std::string get_type_str(const Type &type, StringRef ctx_name,
                          generation_context &ctx) {
   std::string ret;
@@ -74,20 +82,21 @@ std::string get_ret_type(const Function &f, generation_context &ctx) {
   std::string tp;
   raw_string_ostream os(tp);
   os << get_type_str(*ret_type, "Ctx", ctx);
-  os << formatv("auto *ret_type_{0} = type_{1};\n", &f, ret_type);
+  os << formatv("auto *ret_type_{0} = type_{1};\n", ctx.get_value_idx(f),
+                ret_type);
   return tp;
 }
 
 std::string get_args_types(const Function &f, generation_context &ctx) {
   std::string create_args;
   raw_string_ostream os(create_args);
-  os << formatv("std::vector<Type*> args_{0};\n", &f);
+  os << formatv("std::vector<Type*> args_{0};\n", ctx.get_value_idx(f));
   auto *func_type = f.getFunctionType();
   assert(func_type);
   for (auto *t : func_type->params()) {
     assert(t);
     os << get_type_str(*t, "Ctx", ctx);
-    os << formatv("args_{0}.push_back(type_{1});\n", &f, t);
+    os << formatv("args_{0}.push_back(type_{1});\n", ctx.get_value_idx(f), t);
   }
   return create_args;
 }
@@ -99,7 +108,7 @@ std::string get_func_type(const Function &f, generation_context &ctx) {
   os << get_args_types(f, ctx);
   os << formatv("auto *func_type_{0} = FunctionType::get(ret_type_{0}, "
                 "args_{0}, false);\n",
-                &f)
+                ctx.get_value_idx(f))
             .str();
   return create_func_type;
 }
@@ -151,20 +160,25 @@ void create_operand(const Value &v, const Value &parent, unsigned idx,
   if (auto *int_constant = dyn_cast<ConstantInt>(&v)) {
     os << formatv(
         "auto *op_{0}_{1} = ConstantInt::get(Ctx, APInt({2}, {3}));\n", idx,
-        &parent, int_constant->getBitWidth(), int_constant->getZExtValue());
+        ctx.get_value_idx(parent), int_constant->getBitWidth(),
+        int_constant->getZExtValue());
   } else if (auto *bb = dyn_cast<BasicBlock>(&v)) {
-    os << formatv("auto *op_{0}_{1} = bb_{2};\n", idx, &parent, bb);
+    os << formatv("auto *op_{0}_{1} = bb_{2};\n", idx,
+                  ctx.get_value_idx(parent), ctx.get_value_idx(*bb));
   } else if (auto *func = dyn_cast<Function>(&v)) {
-    os << formatv("auto *op_{0}_{1} = func_{2};\n", idx, &parent, func);
+    os << formatv("auto *op_{0}_{1} = func_{2};\n", idx,
+                  ctx.get_value_idx(parent), ctx.get_value_idx(*func));
   } else if (auto *instr = dyn_cast<Instruction>(&v)) {
-    os << formatv("auto *op_{0}_{1} = instr_{2};\n", idx, &parent, instr);
+    os << formatv("auto *op_{0}_{1} = instr_{2};\n", idx,
+                  ctx.get_value_idx(parent), ctx.get_value_idx(*instr));
   } else if (auto *gv = dyn_cast<GlobalVariable>(&v)) {
     auto *constant = gv->getInitializer();
     if (auto *const_str = dyn_cast<ConstantDataSequential>(constant)) {
       if (const_str->isString())
         os << formatv("auto *op_{0}_{1} = ConstantDataArray::getString(Ctx, "
                       "\"{2}\", true);\n",
-                      idx, &parent, const_str->getAsString().drop_back());
+                      idx, ctx.get_value_idx(parent),
+                      const_str->getAsString().drop_back());
       else
         os << "UNKNOWN\n";
     }
@@ -181,18 +195,18 @@ void create_phi_node(const PHINode &phi, raw_ostream &os,
   auto num_incoming = phi.getNumIncomingValues();
   auto *type = phi.getType();
   os << get_type_str(*type, "Ctx", ctx);
-  os << formatv("auto *phi_ty_{0} = type_{1};\n", &phi, type);
-  os << formatv("auto *phi_{0} = {1}.CreatePHI(phi_ty_{0}, {2}, \"\");\n", &phi,
-                builder, num_incoming);
+  os << formatv("auto *phi_ty_{0} = type_{1};\n", ctx.get_value_idx(phi), type);
+  os << formatv("auto *phi_{0} = {1}.CreatePHI(phi_ty_{0}, {2}, \"\");\n",
+                ctx.get_value_idx(phi), builder, num_incoming);
   for (auto &&[idx, pair] :
        enumerate(zip(phi.incoming_values(), phi.blocks()))) {
     auto &&[val, bb] = pair;
-    create_operand(*val.get(), *static_cast<const Value *>(&phi), idx, os, ctx);
-    os << formatv("phi_{0}->addIncoming(op_{1}_{2}, bb_{3});\n", &phi, idx,
-                  static_cast<const Value *>(&phi), &bb);
+    create_operand(*val.get(), *get_value(phi), idx, os, ctx);
+    os << formatv("phi_{0}->addIncoming(op_{1}_{2}, bb_{3});\n",
+                  ctx.get_value_idx(phi), idx, ctx.get_value_idx(phi),
+                  ctx.get_value_idx(*bb));
   }
-  os << formatv("auto *instr_{0} = phi_{1};\n", dyn_cast<Instruction>(&phi),
-                &phi);
+  os << formatv("auto *instr_{0} = phi_{0};\n", ctx.get_value_idx(phi));
 }
 
 bool requires_special_handling(const Instruction &instr) {
@@ -200,6 +214,8 @@ bool requires_special_handling(const Instruction &instr) {
   case Instruction::Alloca:
     return true;
   case Instruction::Call:
+    return true;
+  case Instruction::GetElementPtr:
     return true;
   default:
     return false;
@@ -215,7 +231,8 @@ void create_pre_args(const Instruction &instr, raw_ostream &os,
     auto *allocated_type = alloca->getAllocatedType();
     assert(allocated_type);
     os << get_type_str(*allocated_type, "Ctx", ctx);
-    os << formatv("auto *add_arg_{0} = type_{1};\n", &instr, allocated_type);
+    os << formatv("auto *add_arg_{0} = type_{1};\n", ctx.get_value_idx(instr),
+                  allocated_type);
     break;
   }
   default:
@@ -226,19 +243,18 @@ void create_pre_args(const Instruction &instr, raw_ostream &os,
 void generate_call_create_instr(const Instruction &instr, raw_ostream &os,
                                 generation_context &ctx,
                                 std::optional<unsigned> num = std::nullopt) {
-  os << formatv("auto *instr_{0} = {1}.Create{2}(", &instr, builder,
-                get_instr_create_name(instr))
+  os << formatv("auto *instr_{0} = {1}.Create{2}(", ctx.get_value_idx(instr),
+                builder, get_instr_create_name(instr))
             .str();
   if (auto *_ = dyn_cast<AllocaInst>(&instr))
-    os << formatv("add_arg_{0}, ", &instr);
+    os << formatv("add_arg_{0}, ", ctx.get_value_idx(instr));
 
   interleaveComma(
-      map_range(llvm::index_range(0, num.value_or(instr.getNumOperands())),
-                [&instr](auto idx) {
-                  return formatv("op_{0}_{1}", idx,
-                                 static_cast<const Value *>(&instr))
-                      .str();
-                }),
+      map_range(
+          llvm::index_range(0, num.value_or(instr.getNumOperands())),
+          [&instr, &ctx](auto idx) {
+            return formatv("op_{0}_{1}", idx, ctx.get_value_idx(instr)).str();
+          }),
       os);
   os << formatv(");\n");
 }
@@ -246,7 +262,6 @@ void generate_call_create_instr(const Instruction &instr, raw_ostream &os,
 void generate_operands(const Instruction &instr, raw_ostream &os,
                        generation_context &ctx) {
   for (auto &&[idx, op] : enumerate(instr.operands())) {
-    //   if (idx == 0) continue; // drop_begin segfaults
     auto *val = op.get();
     assert(val);
     create_operand(*val, *static_cast<const Value *>(&instr), idx, os, ctx);
@@ -272,34 +287,68 @@ void generate_special_instr(const Instruction &instr, raw_ostream &os,
     assert(func);
     unsigned idx = 0;
     os << formatv("auto *op_{0}_{1} = func_type_{2};\n", idx++,
-                  static_cast<const Value *>(&instr), func);
+                  ctx.get_value_idx(instr), ctx.get_value_idx(*func));
     os << formatv("auto *op_{0}_{1} = func_{2};\n", idx++,
-                  static_cast<const Value *>(&instr), func);
+                  ctx.get_value_idx(instr), ctx.get_value_idx(*func));
     os << formatv("std::vector<Value *> op_{0}_{1};\n", idx++,
-                  static_cast<const Value *>(&instr));
+                  ctx.get_value_idx(instr));
     auto first_arg_idx = idx;
     auto non_functions =
         llvm::make_filter_range(instr.operands(), std::not_fn(is_function));
     for (auto &&op : non_functions) {
       auto *val = op.get();
       assert(val);
-      create_operand(*val, *static_cast<const Value *>(&instr), idx++, os, ctx);
+      create_operand(*val, *get_value(instr), idx++, os, ctx);
     }
     for (auto i = first_arg_idx; i < idx; ++i) {
       os << formatv("op_{0}_{1}.push_back(op_{2}_{1});\n", first_arg_idx - 1,
-                    static_cast<const Value *>(&instr), i);
+                    ctx.get_value_idx(instr), i);
     }
     generate_call_create_instr(instr, os, ctx, first_arg_idx);
+    return;
   }
+  case Instruction::GetElementPtr: {
+    auto *gep = dyn_cast<GetElementPtrInst>(&instr);
+    assert(gep);
+    auto *pointee_type = gep->getSourceElementType();
+    assert(pointee_type);
+    os << get_type_str(*pointee_type, "Ctx", ctx);
+    unsigned idx = 0;
+    os << formatv("auto *op_{0}_{1} = type_{2};\n", idx++,
+                  ctx.get_value_idx(instr), pointee_type);
+    auto &&operands = instr.operands();
+    assert(!operands.empty());
+    auto *first_op = operands.begin();
+    auto *src_instr = dyn_cast<Instruction>(first_op->get());
+    assert(src_instr);
+    os << formatv("auto *op_{0}_{1} = instr_{2};\n", idx++,
+                  ctx.get_value_idx(instr), ctx.get_value_idx(*src_instr));
+    auto array_idx = idx;
+    os << formatv("std::vector<Value *> op_{0}_{1};\n", idx++,
+                  ctx.get_value_idx(instr));
+    for (auto &op : llvm::drop_begin(operands)) {
+      auto *val = op.get();
+      assert(val);
+      create_operand(*val, *get_value(instr), idx++, os, ctx);
+    }
+    for (auto i = array_idx + 1; i < idx; ++i) {
+      os << formatv("op_{0}_{1}.push_back(op_{2}_{1});\n", array_idx,
+                    ctx.get_value_idx(instr), i);
+    }
+    generate_call_create_instr(instr, os, ctx, array_idx + 1);
+    return;
+  }
+  default:
+    llvm_unreachable("unknown special instr");
   }
 }
 
 std::string create_instr(const Instruction &instr, generation_context &ctx) {
   std::string instr_str;
   raw_string_ostream os(instr_str);
-  // os << "\n\nINSTR:\n";
-  // instr.print(os);
-  // os << "\n";
+  auto *bb = instr.getParent();
+  os << formatv("{0}.SetInsertPoint(bb_{1});\n", builder,
+                ctx.get_value_idx(*bb));
   if (auto *phi = dyn_cast<PHINode>(&instr)) {
     auto [it, inserted] = ctx.phis.try_emplace(phi, instr.getNextNode());
     assert(inserted);
@@ -319,13 +368,8 @@ std::string create_bb(const BasicBlock &bb, generation_context &ctx) {
   assert(f);
   std::string bb_str;
   raw_string_ostream os(bb_str);
-  os << formatv("auto *bb_{0} = BasicBlock::Create(Ctx, \"\", func_{1});\n",
-                &bb, f);
-  os << formatv("{0}.SetInsertPoint(bb_{1});\n", builder, &bb);
-
-  for (auto &instr : bb) {
+  for (auto &instr : bb)
     os << create_instr(instr, ctx);
-  }
   return bb_str;
 }
 
@@ -335,8 +379,12 @@ std::string create_func(const Function &f, generation_context &ctx) {
   os << get_func_type(f, ctx);
   os << formatv("auto *func_{0} = Function::Create(func_type_{0}, "
                 "Function::ExternalLinkage, \"{1}\", M);\n",
-                &f, f.getName())
+                ctx.get_value_idx(f), f.getName())
             .str();
+  for (auto &&bb : f)
+    os << formatv("auto *bb_{0} = BasicBlock::Create(Ctx, \"\", func_{1});\n",
+                  ctx.get_value_idx(bb), ctx.get_value_idx(f));
+  // FIXME: use BFS
   for (auto &bb : f)
     os << create_bb(bb, ctx);
   return func;
@@ -356,7 +404,8 @@ PreservedAnalyses api_gen_pass::run(Function &f, FunctionAnalysisManager &) {
   for (auto [phi, ins] : ctx.phis) {
     assert(phi);
     assert(ins);
-    os << formatv("{0}.SetInsertPoint(instr_{1});\n", builder, ins);
+    os << formatv("{0}.SetInsertPoint(instr_{1});\n", builder,
+                  ctx.get_value_idx(*ins));
     create_phi_node(*phi, os, ctx);
   }
   return PreservedAnalyses::all();
