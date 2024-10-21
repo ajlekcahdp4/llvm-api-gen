@@ -390,7 +390,7 @@ void generate_special_instr(const Instruction &instr, raw_ostream &os,
     return;
   }
   if (auto *load = dyn_cast<LoadInst>(&instr)) {
-    auto *type = load->getPointerOperandType();
+    auto *type = load->getType();
     assert(type);
     os << get_type_str(*type, "Ctx", ctx);
     unsigned idx = 0;
