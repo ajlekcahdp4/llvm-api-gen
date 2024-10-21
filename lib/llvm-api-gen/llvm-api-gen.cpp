@@ -133,7 +133,6 @@ std::string get_instr_create_name(const Instruction &instr) {
     CASE_INSTR(Or)
     CASE_INSTR(Xor)
     CASE_INSTR(Ret)
-    CASE_INSTR(Br)
     CASE_INSTR(ICmp)
     CASE_INSTR(Select)
     CASE_INSTR(Load)
@@ -149,6 +148,13 @@ std::string get_instr_create_name(const Instruction &instr) {
   case Instruction::SExt:
   case Instruction::ZExt:
     return "Cast";
+  case Instruction::Br: {
+    auto *br = dyn_cast<BranchInst>(&instr);
+    assert(br);
+    if (br->isConditional())
+      return "CondBr";
+    return "Br";
+  }
   default:
     return "UNSUPPORTED";
     // llvm_unreachable("Unsupported instruction");
@@ -224,6 +230,7 @@ bool requires_special_handling(const Instruction &instr) {
   case Instruction::Trunc:
   case Instruction::SExt:
   case Instruction::ZExt:
+  case Instruction::Switch:
     return true;
   default:
     return false;
@@ -427,6 +434,28 @@ void generate_special_instr(const Instruction &instr, raw_ostream &os,
     generate_call_create_instr(instr, os, ctx, idx);
     return;
   }
+  if (auto *sw = dyn_cast<SwitchInst>(&instr)) {
+    auto *cond = sw->getCondition();
+    auto *def_dest = sw->getDefaultDest();
+    unsigned idx = 0;
+    create_operand(*cond, *get_value(instr), idx++, os, ctx);
+    create_operand(*def_dest, *get_value(instr), idx++, os, ctx);
+    os << formatv("auto op_{0}_{1} = {2};\n", idx++, ctx.get_value_idx(instr),
+                  sw->getNumCases());
+    generate_call_create_instr(instr, os, ctx, idx);
+    for (auto &&[i, c] : enumerate(sw->cases())) {
+      create_operand(*c.getCaseValue(), *get_value(instr), idx, os, ctx);
+      os << formatv("auto *case_cond_{0}_{2} = op_{1}_{2};\n", i, idx++,
+                    ctx.get_value_idx(instr));
+      create_operand(*c.getCaseSuccessor(), *get_value(instr), idx, os, ctx);
+      os << formatv("auto *case_dest_{0}_{2} = op_{1}_{2};\n", i, idx++,
+                    ctx.get_value_idx(instr));
+      os << formatv(
+          "instr_{0}->addCase(case_cond_{1}_{0}, case_dest_{1}_{0});\n",
+          ctx.get_value_idx(instr), i);
+    }
+    return;
+  }
   llvm_unreachable("unknown special instr");
 }
 
@@ -492,8 +521,8 @@ PreservedAnalyses api_gen_pass::run(Function &f, FunctionAnalysisManager &) {
   for (auto [phi, ins] : ctx.phis) {
     assert(phi);
     assert(ins);
-    os << formatv("{0}.SetInsertPoint(instr_{1});\n", builder,
-                  ctx.get_value_idx(*ins));
+    os << formatv("{0}.SetInsertPoint(dyn_cast<Instruction>(instr_{1}));\n",
+                  builder, ctx.get_value_idx(*ins));
     fill_phi_node(*phi, os, ctx);
   }
   return PreservedAnalyses::all();
