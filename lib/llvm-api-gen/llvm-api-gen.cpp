@@ -486,9 +486,18 @@ void generate_special_instr(const Instruction &instr, raw_ostream &os,
   llvm_unreachable("unknown special instr");
 }
 
+std::string get_instr_comment(const Instruction &instr) {
+  std::string comment = "/*\n";
+  raw_string_ostream os(comment);
+  instr.print(os);
+  os << "\n*/\n";
+  return comment;
+}
+
 std::string create_instr(const Instruction &instr, generation_context &ctx) {
   std::string instr_str;
   raw_string_ostream os(instr_str);
+  os << get_instr_comment(instr);
   auto *bb = instr.getParent();
   os << formatv("{0}.SetInsertPoint(bb_{1});\n", builder,
                 ctx.get_value_idx(*bb));
