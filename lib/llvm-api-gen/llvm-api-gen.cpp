@@ -580,7 +580,7 @@ PassPluginLibraryInfo get_api_gen_plugin_info() {
             pb.registerPipelineParsingCallback(
                 [&](StringRef name, FunctionPassManager &fpm,
                     ArrayRef<PassBuilder::PipelineElement>) {
-                  if (name != "print<llvm-api-gen>")
+                  if (name != "llvm-api-gen")
                     return false;
                   fpm.addPass(lag::api_gen_pass(outs()));
                   return true;
