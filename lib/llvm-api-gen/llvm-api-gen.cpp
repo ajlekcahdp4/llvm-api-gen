@@ -132,9 +132,6 @@ std::string get_instr_create_name(const Instruction &instr) {
     CASE_INSTR(And)
     CASE_INSTR(Or)
     CASE_INSTR(Xor)
-    CASE_INSTR(Trunc)
-    CASE_INSTR(ZExt)
-    CASE_INSTR(SExt)
     CASE_INSTR(Ret)
     CASE_INSTR(Br)
     CASE_INSTR(ICmp)
@@ -148,6 +145,10 @@ std::string get_instr_create_name(const Instruction &instr) {
     CASE_INSTR(Unreachable)
   case Instruction::GetElementPtr:
     return "GEP";
+  case Instruction::Trunc:
+  case Instruction::SExt:
+  case Instruction::ZExt:
+    return "Cast";
   default:
     return "UNSUPPORTED";
     // llvm_unreachable("Unsupported instruction");
@@ -190,14 +191,8 @@ void create_operand(const Value &v, const Value &parent, unsigned idx,
   }
 }
 // Handle PHI nodes last
-void create_phi_node(const PHINode &phi, raw_ostream &os,
-                     generation_context &ctx) {
-  auto num_incoming = phi.getNumIncomingValues();
-  auto *type = phi.getType();
-  os << get_type_str(*type, "Ctx", ctx);
-  os << formatv("auto *phi_ty_{0} = type_{1};\n", ctx.get_value_idx(phi), type);
-  os << formatv("auto *phi_{0} = {1}.CreatePHI(phi_ty_{0}, {2}, \"\");\n",
-                ctx.get_value_idx(phi), builder, num_incoming);
+void fill_phi_node(const PHINode &phi, raw_ostream &os,
+                   generation_context &ctx) {
   for (auto &&[idx, pair] :
        enumerate(zip(phi.incoming_values(), phi.blocks()))) {
     auto &&[val, bb] = pair;
@@ -206,16 +201,29 @@ void create_phi_node(const PHINode &phi, raw_ostream &os,
                   ctx.get_value_idx(phi), idx, ctx.get_value_idx(phi),
                   ctx.get_value_idx(*bb));
   }
+}
+
+void declare_phi_node(const PHINode &phi, raw_ostream &os,
+                      generation_context &ctx) {
+  auto num_incoming = phi.getNumIncomingValues();
+  auto *type = phi.getType();
+  os << get_type_str(*type, "Ctx", ctx);
+  os << formatv("auto *phi_ty_{0} = type_{1};\n", ctx.get_value_idx(phi), type);
+  os << formatv("auto *phi_{0} = {1}.CreatePHI(phi_ty_{0}, {2}, \"\");\n",
+                ctx.get_value_idx(phi), builder, num_incoming);
   os << formatv("auto *instr_{0} = phi_{0};\n", ctx.get_value_idx(phi));
 }
 
 bool requires_special_handling(const Instruction &instr) {
   switch (instr.getOpcode()) {
   case Instruction::Alloca:
-    return true;
   case Instruction::Call:
-    return true;
   case Instruction::GetElementPtr:
+  case Instruction::Load:
+  case Instruction::ICmp:
+  case Instruction::Trunc:
+  case Instruction::SExt:
+  case Instruction::ZExt:
     return true;
   default:
     return false;
@@ -268,16 +276,54 @@ void generate_operands(const Instruction &instr, raw_ostream &os,
   }
 }
 
+#define CASE_PRED(name)                                                        \
+  case CmpInst::Predicate::name:                                               \
+    return "CmpInst::Predicate::" #name;
+
+std::string get_cmp_predicate_name(CmpInst::Predicate pred) {
+  // CmpInst::getPredicateName is not an option since we need enum member name
+  // and not a pretty-print. I wish we had reflection in C++
+  switch (pred) {
+    CASE_PRED(ICMP_EQ)
+    CASE_PRED(ICMP_NE)
+    CASE_PRED(ICMP_SGE)
+    CASE_PRED(ICMP_SGT)
+    CASE_PRED(ICMP_SLE)
+    CASE_PRED(ICMP_SLT)
+    CASE_PRED(ICMP_UGE)
+    CASE_PRED(ICMP_UGT)
+    CASE_PRED(ICMP_ULE)
+    CASE_PRED(ICMP_ULT)
+  default:
+    llvm_unreachable("unsupported CmpInst predicate");
+  }
+}
+#undef CASE_PRED
+
+#define CASE_CAST(name)                                                        \
+  case Instruction::CastOps::name:                                             \
+    return "Instruction::CastOps::" #name;
+
+std::string get_cast_opcode(Instruction::CastOps op) {
+  switch (op) {
+    CASE_CAST(Trunc)
+    CASE_CAST(ZExt)
+    CASE_CAST(SExt)
+  default:
+    llvm_unreachable("unsupported cast opcode");
+  }
+}
+#undef CASE_CAST
+
 void generate_special_instr(const Instruction &instr, raw_ostream &os,
                             generation_context &ctx) {
-  switch (instr.getOpcode()) {
-  case Instruction::Alloca: {
+  if (auto *alloca = dyn_cast<AllocaInst>(&instr)) {
     create_pre_args(instr, os, ctx);
     generate_operands(instr, os, ctx);
     generate_call_create_instr(instr, os, ctx);
     return;
   }
-  case Instruction::Call: {
+  if (auto *call = dyn_cast<CallInst>(&instr)) {
     auto is_function = [](auto &op) -> bool {
       return dyn_cast<Function>(op.get());
     };
@@ -307,9 +353,7 @@ void generate_special_instr(const Instruction &instr, raw_ostream &os,
     generate_call_create_instr(instr, os, ctx, first_arg_idx);
     return;
   }
-  case Instruction::GetElementPtr: {
-    auto *gep = dyn_cast<GetElementPtrInst>(&instr);
-    assert(gep);
+  if (auto *gep = dyn_cast<GetElementPtrInst>(&instr)) {
     auto *pointee_type = gep->getSourceElementType();
     assert(pointee_type);
     os << get_type_str(*pointee_type, "Ctx", ctx);
@@ -338,9 +382,52 @@ void generate_special_instr(const Instruction &instr, raw_ostream &os,
     generate_call_create_instr(instr, os, ctx, array_idx + 1);
     return;
   }
-  default:
-    llvm_unreachable("unknown special instr");
+  if (auto *load = dyn_cast<LoadInst>(&instr)) {
+    auto *type = load->getPointerOperandType();
+    assert(type);
+    os << get_type_str(*type, "Ctx", ctx);
+    unsigned idx = 0;
+    os << formatv("auto *op_{0}_{1} = type_{2};\n", idx++,
+                  ctx.get_value_idx(instr), type);
+    for (auto &op : load->operands()) {
+      auto *val = op.get();
+      assert(val);
+      create_operand(*val, *get_value(instr), idx++, os, ctx);
+    }
+    generate_call_create_instr(instr, os, ctx, idx);
+    return;
   }
+  if (auto *icmp = dyn_cast<ICmpInst>(&instr)) {
+    auto pred = icmp->getPredicate();
+    unsigned idx = 0;
+    os << formatv("auto op_{0}_{1} = {2};\n", idx++, ctx.get_value_idx(instr),
+                  get_cmp_predicate_name(pred));
+    for (auto &op : icmp->operands()) {
+      auto *val = op.get();
+      assert(val);
+      create_operand(*val, *get_value(instr), idx++, os, ctx);
+    }
+    generate_call_create_instr(instr, os, ctx, idx);
+    return;
+  }
+  if (auto *cast = dyn_cast<CastInst>(&instr)) {
+    auto *type = cast->getDestTy();
+    assert(type);
+    auto opc = cast->getOpcode();
+    unsigned idx = 0;
+    os << formatv("auto op_{0}_{1} = {2};\n", idx++, ctx.get_value_idx(instr),
+                  get_cast_opcode(opc));
+    for (auto &op : cast->operands()) {
+      auto *val = op.get();
+      assert(val);
+      create_operand(*val, *get_value(instr), idx++, os, ctx);
+    }
+    os << formatv("auto *op_{0}_{1} = type_{2};\n", idx++,
+                  ctx.get_value_idx(instr), type);
+    generate_call_create_instr(instr, os, ctx, idx);
+    return;
+  }
+  llvm_unreachable("unknown special instr");
 }
 
 std::string create_instr(const Instruction &instr, generation_context &ctx) {
@@ -352,6 +439,7 @@ std::string create_instr(const Instruction &instr, generation_context &ctx) {
   if (auto *phi = dyn_cast<PHINode>(&instr)) {
     auto [it, inserted] = ctx.phis.try_emplace(phi, instr.getNextNode());
     assert(inserted);
+    declare_phi_node(*phi, os, ctx);
     return instr_str;
   }
   if (requires_special_handling(instr)) {
@@ -406,7 +494,7 @@ PreservedAnalyses api_gen_pass::run(Function &f, FunctionAnalysisManager &) {
     assert(ins);
     os << formatv("{0}.SetInsertPoint(instr_{1});\n", builder,
                   ctx.get_value_idx(*ins));
-    create_phi_node(*phi, os, ctx);
+    fill_phi_node(*phi, os, ctx);
   }
   return PreservedAnalyses::all();
 }
