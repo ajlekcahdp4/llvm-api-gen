@@ -1,6 +1,7 @@
 #include "llvm-api-gen/llvm-api-gen.h"
 
 #include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Metadata.h>
 #include <llvm/IR/PassManager.h>
@@ -119,8 +120,8 @@ std::string get_func_type(const Function &f, generation_context &ctx) {
 
 std::string get_instr_create_name(const Instruction &instr) {
   switch (instr.getOpcode()) {
-    CASE_INSTR(Sub)
     CASE_INSTR(Add)
+    CASE_INSTR(Sub)
     CASE_INSTR(Mul)
     CASE_INSTR(UDiv)
     CASE_INSTR(SDiv)
@@ -231,6 +232,8 @@ bool requires_special_handling(const Instruction &instr) {
   case Instruction::SExt:
   case Instruction::ZExt:
   case Instruction::Switch:
+  case Instruction::Add:
+  case Instruction::Sub:
     return true;
   default:
     return false;
@@ -321,6 +324,20 @@ std::string get_cast_opcode(Instruction::CastOps op) {
   }
 }
 #undef CASE_CAST
+
+#define CASE_BINOP(name)                                                       \
+  case Instruction::BinaryOps::name:                                           \
+    return "Instruction::BinaryOps::" #name;
+
+std::string get_binop_opcode(Instruction::BinaryOps op) {
+  switch (op) {
+    CASE_BINOP(Add)
+    CASE_BINOP(Sub)
+  default:
+    llvm_unreachable("unsupported binop opcode");
+  }
+}
+#undef CASE_BINOP
 
 void generate_special_instr(const Instruction &instr, raw_ostream &os,
                             generation_context &ctx) {
@@ -456,6 +473,16 @@ void generate_special_instr(const Instruction &instr, raw_ostream &os,
     }
     return;
   }
+  if (auto *binop = dyn_cast<BinaryOperator>(&instr)) {
+    unsigned idx = 0;
+    for (auto &op : binop->operands()) {
+      auto *val = op.get();
+      assert(val);
+      create_operand(*val, *get_value(instr), idx++, os, ctx);
+    }
+    generate_call_create_instr(instr, os, ctx, idx);
+    return;
+  }
   llvm_unreachable("unknown special instr");
 }
 
@@ -477,6 +504,13 @@ std::string create_instr(const Instruction &instr, generation_context &ctx) {
     generate_operands(instr, os, ctx);
     generate_call_create_instr(instr, os, ctx);
   }
+  if (instr.hasNoUnsignedWrap())
+    os << formatv("dyn_cast<Instruction>(instr_{0})->setHasNoUnsignedWrap();\n",
+                  ctx.get_value_idx(instr));
+  if (instr.hasNoSignedWrap())
+    os << formatv("dyn_cast<Instruction>(instr_{0})->setHasNoSignedWrap();\n",
+                  ctx.get_value_idx(instr));
+
   return instr_str;
 }
 
