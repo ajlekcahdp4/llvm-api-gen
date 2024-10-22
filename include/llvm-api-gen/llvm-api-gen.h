@@ -10,6 +10,6 @@ class api_gen_pass : public PassInfoMixin<api_gen_pass> {
 
 public:
   api_gen_pass(raw_ostream &os) : os(os) {}
-  PreservedAnalyses run(Function &f, FunctionAnalysisManager &);
+  PreservedAnalyses run(Module &m, ModuleAnalysisManager &);
 };
 } // namespace lag

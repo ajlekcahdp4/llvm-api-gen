@@ -1,5 +1,6 @@
 #include "llvm-api-gen/llvm-api-gen.h"
 
+#include <llvm/Analysis/CallGraph.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instructions.h>
@@ -533,7 +534,7 @@ std::string create_bb(const BasicBlock &bb, generation_context &ctx) {
   return bb_str;
 }
 
-std::string create_func(const Function &f, generation_context &ctx) {
+std::string create_func_str(const Function &f, generation_context &ctx) {
   std::string func;
   raw_string_ostream os(func);
   os << get_func_type(f, ctx);
@@ -547,20 +548,6 @@ std::string create_func(const Function &f, generation_context &ctx) {
   // FIXME: use BFS
   for (auto &bb : f)
     os << create_bb(bb, ctx);
-  return func;
-}
-
-PreservedAnalyses api_gen_pass::run(Function &f, FunctionAnalysisManager &) {
-  std::unordered_set<std::string> visited;
-  generation_context ctx;
-  visited.insert(f.getName().str());
-  auto *m = f.getParent();
-  assert(m);
-  for (auto &ff : m->getFunctionList()) {
-    if (ff.getName() != f.getName() && !visited.contains(ff.getName().str()))
-      os << create_func(ff, ctx);
-  }
-  os << create_func(f, ctx);
   for (auto [phi, ins] : ctx.phis) {
     assert(phi);
     assert(ins);
@@ -568,6 +555,43 @@ PreservedAnalyses api_gen_pass::run(Function &f, FunctionAnalysisManager &) {
                   builder, ctx.get_value_idx(*ins));
     fill_phi_node(*phi, os, ctx);
   }
+  return func;
+}
+
+void create_func(const Function &f, raw_ostream &os, generation_context &ctx) {
+  os << create_func_str(f, ctx);
+}
+
+PreservedAnalyses api_gen_pass::run(Module &m, ModuleAnalysisManager &) {
+  generation_context ctx;
+  std::unordered_set<const Function *> visited;
+  CallGraph call_graph(m);
+  for (auto &f : m.getFunctionList()) {
+    auto *cg_node = call_graph[&f];
+    assert(cg_node);
+    auto unvisited = llvm::make_filter_range(*cg_node, [&](auto &call_record) {
+      auto &&[weak_vh, callee_node] = call_record;
+      assert(callee_node);
+      auto *callee = callee_node->getFunction();
+      return callee && !visited.contains(callee) && (callee != &f);
+    });
+    auto unvisited_functions =
+        llvm::map_range(unvisited, [](auto &call_record) {
+          return call_record.second->getFunction();
+        });
+    for (auto *callee : unvisited_functions) {
+      assert(callee);
+      create_func(*callee, os, ctx);
+      auto [it, inserted] = visited.insert(callee);
+      assert(inserted);
+    }
+    if (!visited.contains(&f)) {
+      create_func(f, os, ctx);
+      auto [it, inserted] = visited.insert(&f);
+      assert(inserted);
+    }
+  }
+
   return PreservedAnalyses::all();
 }
 
@@ -578,7 +602,7 @@ PassPluginLibraryInfo get_api_gen_plugin_info() {
   return {LLVM_PLUGIN_API_VERSION, "ApiGenerator", LLVM_VERSION_STRING,
           [](PassBuilder &pb) {
             pb.registerPipelineParsingCallback(
-                [&](StringRef name, FunctionPassManager &fpm,
+                [&](StringRef name, ModulePassManager &fpm,
                     ArrayRef<PassBuilder::PipelineElement>) {
                   if (name != "llvm-api-gen")
                     return false;
