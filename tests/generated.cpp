@@ -7,63 +7,63 @@ using namespace llvm;
 
 void foo(LLVMContext &Ctx, Module &M) {
   IRBuilder builder(Ctx);
-  auto *type_0x000000002F7F93C8 = Type::getVoidTy(Ctx);
-  auto *ret_type_0 = type_0x000000002F7F93C8;
+  auto *type_0x00000000094403C8 = Type::getVoidTy(Ctx);
+  auto *ret_type_0 = type_0x00000000094403C8;
   std::vector<Type *> args_0;
-  auto *type_0x000000002F7F9560 = Type::getIntNTy(Ctx, 64);
-  args_0.push_back(type_0x000000002F7F9560);
-  auto *type_0x000000002F7FDE30 = PointerType::get(Ctx, 0);
-  args_0.push_back(type_0x000000002F7FDE30);
+  auto *type_0x0000000009440560 = Type::getIntNTy(Ctx, 64);
+  args_0.push_back(type_0x0000000009440560);
+  auto *type_0x0000000009444E30 = PointerType::get(Ctx, 0);
+  args_0.push_back(type_0x0000000009444E30);
   auto *func_type_0 = FunctionType::get(ret_type_0, args_0, false);
   auto *func_0 = Function::Create(func_type_0, Function::ExternalLinkage,
                                   "llvm.lifetime.start.p0", M);
-  auto *ret_type_1 = type_0x000000002F7F93C8;
+  auto *ret_type_1 = type_0x00000000094403C8;
   std::vector<Type *> args_1;
-  args_1.push_back(type_0x000000002F7FDE30);
-  auto *type_0x000000002F7F9518 = Type::getIntNTy(Ctx, 8);
-  args_1.push_back(type_0x000000002F7F9518);
-  args_1.push_back(type_0x000000002F7F9560);
-  auto *type_0x000000002F7F9500 = Type::getIntNTy(Ctx, 1);
-  args_1.push_back(type_0x000000002F7F9500);
+  args_1.push_back(type_0x0000000009444E30);
+  auto *type_0x0000000009440518 = Type::getIntNTy(Ctx, 8);
+  args_1.push_back(type_0x0000000009440518);
+  args_1.push_back(type_0x0000000009440560);
+  auto *type_0x0000000009440500 = Type::getIntNTy(Ctx, 1);
+  args_1.push_back(type_0x0000000009440500);
   auto *func_type_1 = FunctionType::get(ret_type_1, args_1, false);
   auto *func_1 = Function::Create(func_type_1, Function::ExternalLinkage,
                                   "llvm.memset.p0.i64", M);
-  auto *ret_type_2 = type_0x000000002F7F93C8;
+  auto *ret_type_2 = type_0x00000000094403C8;
   std::vector<Type *> args_2;
-  auto *type_0x000000002F7F9548 = Type::getIntNTy(Ctx, 32);
-  args_2.push_back(type_0x000000002F7F9548);
-  args_2.push_back(type_0x000000002F7F9548);
-  args_2.push_back(type_0x000000002F7F9548);
-  args_2.push_back(type_0x000000002F7F9548);
+  auto *type_0x0000000009440548 = Type::getIntNTy(Ctx, 32);
+  args_2.push_back(type_0x0000000009440548);
+  args_2.push_back(type_0x0000000009440548);
+  args_2.push_back(type_0x0000000009440548);
+  args_2.push_back(type_0x0000000009440548);
   auto *func_type_2 = FunctionType::get(ret_type_2, args_2, false);
   auto *func_2 =
       Function::Create(func_type_2, Function::ExternalLinkage, "init_sdl", M);
-  auto *ret_type_3 = type_0x000000002F7F93C8;
+  auto *ret_type_3 = type_0x00000000094403C8;
   std::vector<Type *> args_3;
   auto *func_type_3 = FunctionType::get(ret_type_3, args_3, false);
   auto *func_3 = Function::Create(func_type_3, Function::ExternalLinkage,
                                   "destroy_sdl", M);
-  auto *ret_type_4 = type_0x000000002F7F93C8;
+  auto *ret_type_4 = type_0x00000000094403C8;
   std::vector<Type *> args_4;
-  args_4.push_back(type_0x000000002F7F9560);
-  args_4.push_back(type_0x000000002F7FDE30);
+  args_4.push_back(type_0x0000000009440560);
+  args_4.push_back(type_0x0000000009444E30);
   auto *func_type_4 = FunctionType::get(ret_type_4, args_4, false);
   auto *func_4 = Function::Create(func_type_4, Function::ExternalLinkage,
                                   "llvm.lifetime.end.p0", M);
-  auto *ret_type_5 = type_0x000000002F7F93C8;
+  auto *ret_type_5 = type_0x00000000094403C8;
   std::vector<Type *> args_5;
   auto *func_type_5 = FunctionType::get(ret_type_5, args_5, false);
   auto *func_5 =
       Function::Create(func_type_5, Function::ExternalLinkage, "flush", M);
-  auto *ret_type_6 = type_0x000000002F7F93C8;
+  auto *ret_type_6 = type_0x00000000094403C8;
   std::vector<Type *> args_6;
-  args_6.push_back(type_0x000000002F7F9548);
-  args_6.push_back(type_0x000000002F7F9548);
-  args_6.push_back(type_0x000000002F7F9548);
+  args_6.push_back(type_0x0000000009440548);
+  args_6.push_back(type_0x0000000009440548);
+  args_6.push_back(type_0x0000000009440548);
   auto *func_type_6 = FunctionType::get(ret_type_6, args_6, false);
   auto *func_6 =
       Function::Create(func_type_6, Function::ExternalLinkage, "put_cell", M);
-  auto *ret_type_7 = type_0x000000002F7F9548;
+  auto *ret_type_7 = type_0x0000000009440548;
   std::vector<Type *> args_7;
   auto *func_type_7 = FunctionType::get(ret_type_7, args_7, false);
   auto *func_7 =
@@ -110,9 +110,9 @@ void foo(LLVMContext &Ctx, Module &M) {
     %1 = alloca [92 x [92 x i8]], align 16
   */
   builder.SetInsertPoint(bb_8);
-  auto *type_0x000000002F7FDE50 = ArrayType::get(type_0x000000002F7F9518, 92);
-  auto *type_0x000000002F7FDE80 = ArrayType::get(type_0x000000002F7FDE50, 92);
-  auto *add_arg_46 = type_0x000000002F7FDE80;
+  auto *type_0x0000000009444E50 = ArrayType::get(type_0x0000000009440518, 92);
+  auto *type_0x0000000009444E80 = ArrayType::get(type_0x0000000009444E50, 92);
+  auto *add_arg_46 = type_0x0000000009444E80;
   auto *op_0_46 = ConstantInt::get(Ctx, APInt(32, 1));
   auto *instr_46 = builder.CreateAlloca(add_arg_46, op_0_46);
   /*
@@ -148,7 +148,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %2 = getelementptr inbounds [92 x [92 x i8]], ptr %1, i64 0, i64 46, i64 47
   */
   builder.SetInsertPoint(bb_8);
-  auto *op_0_49 = type_0x000000002F7FDE80;
+  auto *op_0_49 = type_0x0000000009444E80;
   auto *op_1_49 = instr_46;
   std::vector<Value *> op_2_49;
   auto *op_3_49 = ConstantInt::get(Ctx, APInt(64, 0));
@@ -170,7 +170,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %3 = getelementptr inbounds [92 x [92 x i8]], ptr %1, i64 0, i64 46, i64 48
   */
   builder.SetInsertPoint(bb_8);
-  auto *op_0_51 = type_0x000000002F7FDE80;
+  auto *op_0_51 = type_0x0000000009444E80;
   auto *op_1_51 = instr_46;
   std::vector<Value *> op_2_51;
   auto *op_3_51 = ConstantInt::get(Ctx, APInt(64, 0));
@@ -192,7 +192,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %4 = getelementptr inbounds [92 x [92 x i8]], ptr %1, i64 0, i64 46, i64 49
   */
   builder.SetInsertPoint(bb_8);
-  auto *op_0_53 = type_0x000000002F7FDE80;
+  auto *op_0_53 = type_0x0000000009444E80;
   auto *op_1_53 = instr_46;
   std::vector<Value *> op_2_53;
   auto *op_3_53 = ConstantInt::get(Ctx, APInt(64, 0));
@@ -214,7 +214,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %5 = getelementptr inbounds [92 x [92 x i8]], ptr %1, i64 0, i64 47, i64 46
   */
   builder.SetInsertPoint(bb_8);
-  auto *op_0_55 = type_0x000000002F7FDE80;
+  auto *op_0_55 = type_0x0000000009444E80;
   auto *op_1_55 = instr_46;
   std::vector<Value *> op_2_55;
   auto *op_3_55 = ConstantInt::get(Ctx, APInt(64, 0));
@@ -236,7 +236,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %6 = getelementptr inbounds [92 x [92 x i8]], ptr %1, i64 0, i64 48, i64 46
   */
   builder.SetInsertPoint(bb_8);
-  auto *op_0_57 = type_0x000000002F7FDE80;
+  auto *op_0_57 = type_0x0000000009444E80;
   auto *op_1_57 = instr_46;
   std::vector<Value *> op_2_57;
   auto *op_3_57 = ConstantInt::get(Ctx, APInt(64, 0));
@@ -258,7 +258,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %7 = getelementptr inbounds [92 x [92 x i8]], ptr %1, i64 0, i64 49, i64 46
   */
   builder.SetInsertPoint(bb_8);
-  auto *op_0_59 = type_0x000000002F7FDE80;
+  auto *op_0_59 = type_0x0000000009444E80;
   auto *op_1_59 = instr_46;
   std::vector<Value *> op_2_59;
   auto *op_3_59 = ConstantInt::get(Ctx, APInt(64, 0));
@@ -303,7 +303,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %9 = phi i32 [ 0, %0 ], [ %116, %115 ]
   */
   builder.SetInsertPoint(bb_9);
-  auto *phi_ty_63 = type_0x000000002F7F9548;
+  auto *phi_ty_63 = type_0x0000000009440548;
   auto *phi_63 = builder.CreatePHI(phi_ty_63, 2, "");
   auto *instr_63 = phi_63;
   /*
@@ -342,7 +342,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %12 = phi i64 [ 0, %8 ], [ %119, %118 ]
   */
   builder.SetInsertPoint(bb_11);
-  auto *phi_ty_68 = type_0x000000002F7F9560;
+  auto *phi_ty_68 = type_0x0000000009440560;
   auto *phi_68 = builder.CreatePHI(phi_ty_68, 2, "");
   auto *instr_68 = phi_68;
   /*
@@ -351,7 +351,7 @@ void foo(LLVMContext &Ctx, Module &M) {
   builder.SetInsertPoint(bb_11);
   auto op_0_69 = Instruction::CastOps::Trunc;
   auto *op_1_69 = instr_68;
-  auto *op_2_69 = type_0x000000002F7F9548;
+  auto *op_2_69 = type_0x0000000009440548;
   auto *instr_69 = builder.CreateCast(op_0_69, op_1_69, op_2_69);
   /*
     %14 = trunc i64 %12 to i32
@@ -359,7 +359,7 @@ void foo(LLVMContext &Ctx, Module &M) {
   builder.SetInsertPoint(bb_11);
   auto op_0_70 = Instruction::CastOps::Trunc;
   auto *op_1_70 = instr_68;
-  auto *op_2_70 = type_0x000000002F7F9548;
+  auto *op_2_70 = type_0x0000000009440548;
   auto *instr_70 = builder.CreateCast(op_0_70, op_1_70, op_2_70);
   /*
     br label %121
@@ -385,7 +385,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %17 = phi i64 [ 0, %15 ], [ %24, %23 ]
   */
   builder.SetInsertPoint(bb_13);
-  auto *phi_ty_74 = type_0x000000002F7F9560;
+  auto *phi_ty_74 = type_0x0000000009440560;
   auto *phi_74 = builder.CreatePHI(phi_ty_74, 2, "");
   auto *instr_74 = phi_74;
   /*
@@ -410,7 +410,7 @@ void foo(LLVMContext &Ctx, Module &M) {
   builder.SetInsertPoint(bb_13);
   auto op_0_77 = Instruction::CastOps::SExt;
   auto *op_1_77 = instr_76;
-  auto *op_2_77 = type_0x000000002F7F9548;
+  auto *op_2_77 = type_0x0000000009440548;
   auto *instr_77 = builder.CreateCast(op_0_77, op_1_77, op_2_77);
   /*
     %21 = select i1 %18, i32 1, i32 2
@@ -426,7 +426,7 @@ void foo(LLVMContext &Ctx, Module &M) {
   builder.SetInsertPoint(bb_13);
   auto op_0_79 = Instruction::CastOps::Trunc;
   auto *op_1_79 = instr_74;
-  auto *op_2_79 = type_0x000000002F7F9548;
+  auto *op_2_79 = type_0x0000000009440548;
   auto *instr_79 = builder.CreateCast(op_0_79, op_1_79, op_2_79);
   /*
     br label %26
@@ -456,14 +456,14 @@ void foo(LLVMContext &Ctx, Module &M) {
   */
   builder.SetInsertPoint(bb_14);
   auto *op_0_83 = instr_82;
-  auto *op_1_83 = bb_13;
-  auto *op_2_83 = bb_31;
+  auto *op_1_83 = bb_31;
+  auto *op_2_83 = bb_13;
   auto *instr_83 = builder.CreateCondBr(op_0_83, op_1_83, op_2_83);
   /*
     %27 = phi i64 [ 0, %16 ], [ %91, %90 ]
   */
   builder.SetInsertPoint(bb_15);
-  auto *phi_ty_84 = type_0x000000002F7F9560;
+  auto *phi_ty_84 = type_0x0000000009440560;
   auto *phi_84 = builder.CreatePHI(phi_ty_84, 2, "");
   auto *instr_84 = phi_84;
   /*
@@ -480,7 +480,7 @@ void foo(LLVMContext &Ctx, Module &M) {
   builder.SetInsertPoint(bb_15);
   auto op_0_86 = Instruction::CastOps::SExt;
   auto *op_1_86 = instr_85;
-  auto *op_2_86 = type_0x000000002F7F9548;
+  auto *op_2_86 = type_0x0000000009440548;
   auto *instr_86 = builder.CreateCast(op_0_86, op_1_86, op_2_86);
   /*
     %30 = icmp eq i64 %27, 91
@@ -504,7 +504,7 @@ void foo(LLVMContext &Ctx, Module &M) {
   builder.SetInsertPoint(bb_15);
   auto op_0_89 = Instruction::CastOps::Trunc;
   auto *op_1_89 = instr_84;
-  auto *op_2_89 = type_0x000000002F7F9548;
+  auto *op_2_89 = type_0x0000000009440548;
   auto *instr_89 = builder.CreateCast(op_0_89, op_1_89, op_2_89);
   /*
     %33 = sub nsw i32 %31, %29
@@ -543,7 +543,7 @@ void foo(LLVMContext &Ctx, Module &M) {
   builder.SetInsertPoint(bb_15);
   auto op_0_94 = Instruction::CastOps::ZExt;
   auto *op_1_94 = instr_93;
-  auto *op_2_94 = type_0x000000002F7F9560;
+  auto *op_2_94 = type_0x0000000009440560;
   auto *instr_94 = builder.CreateCast(op_0_94, op_1_94, op_2_94);
   /*
     %38 = xor i1 %28, true
@@ -558,7 +558,7 @@ void foo(LLVMContext &Ctx, Module &M) {
   builder.SetInsertPoint(bb_15);
   auto op_0_96 = Instruction::CastOps::ZExt;
   auto *op_1_96 = instr_95;
-  auto *op_2_96 = type_0x000000002F7F9548;
+  auto *op_2_96 = type_0x0000000009440548;
   auto *instr_96 = builder.CreateCast(op_0_96, op_1_96, op_2_96);
   /*
     br label %40
@@ -570,14 +570,14 @@ void foo(LLVMContext &Ctx, Module &M) {
     %41 = phi i32 [ %20, %26 ], [ %54, %53 ]
   */
   builder.SetInsertPoint(bb_16);
-  auto *phi_ty_98 = type_0x000000002F7F9548;
+  auto *phi_ty_98 = type_0x0000000009440548;
   auto *phi_98 = builder.CreatePHI(phi_ty_98, 2, "");
   auto *instr_98 = phi_98;
   /*
     %42 = phi i32 [ 0, %26 ], [ %75, %53 ]
   */
   builder.SetInsertPoint(bb_16);
-  auto *phi_ty_99 = type_0x000000002F7F9548;
+  auto *phi_ty_99 = type_0x0000000009440548;
   auto *phi_99 = builder.CreatePHI(phi_ty_99, 2, "");
   auto *instr_99 = phi_99;
   /*
@@ -594,21 +594,21 @@ void foo(LLVMContext &Ctx, Module &M) {
   builder.SetInsertPoint(bb_16);
   auto op_0_101 = Instruction::CastOps::ZExt;
   auto *op_1_101 = instr_100;
-  auto *op_2_101 = type_0x000000002F7F9560;
+  auto *op_2_101 = type_0x0000000009440560;
   auto *instr_101 = builder.CreateCast(op_0_101, op_1_101, op_2_101);
   /*
     br i1 %35, label %50, label %45
   */
   builder.SetInsertPoint(bb_16);
   auto *op_0_102 = instr_92;
-  auto *op_1_102 = bb_17;
-  auto *op_2_102 = bb_19;
+  auto *op_1_102 = bb_19;
+  auto *op_2_102 = bb_17;
   auto *instr_102 = builder.CreateCondBr(op_0_102, op_1_102, op_2_102);
   /*
     %46 = getelementptr [92 x i8], ptr %1, i64 %44, i64 %37
   */
   builder.SetInsertPoint(bb_17);
-  auto *op_0_103 = type_0x000000002F7FDE50;
+  auto *op_0_103 = type_0x0000000009444E50;
   auto *op_1_103 = instr_46;
   std::vector<Value *> op_2_103;
   auto *op_3_103 = instr_101;
@@ -620,7 +620,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %47 = load i8, ptr %46, align 1, !tbaa !4
   */
   builder.SetInsertPoint(bb_17);
-  auto *op_0_104 = type_0x000000002F7F9518;
+  auto *op_0_104 = type_0x0000000009440518;
   auto *op_1_104 = instr_103;
   auto *instr_104 = builder.CreateLoad(op_0_104, op_1_104);
   /*
@@ -661,14 +661,14 @@ void foo(LLVMContext &Ctx, Module &M) {
     %51 = phi i32 [ %29, %40 ], [ %39, %48 ], [ %39, %45 ]
   */
   builder.SetInsertPoint(bb_19);
-  auto *phi_ty_108 = type_0x000000002F7F9548;
+  auto *phi_ty_108 = type_0x0000000009440548;
   auto *phi_108 = builder.CreatePHI(phi_ty_108, 3, "");
   auto *instr_108 = phi_108;
   /*
     %52 = phi i32 [ %42, %40 ], [ %49, %48 ], [ %42, %45 ]
   */
   builder.SetInsertPoint(bb_19);
-  auto *phi_ty_109 = type_0x000000002F7F9548;
+  auto *phi_ty_109 = type_0x0000000009440548;
   auto *phi_109 = builder.CreatePHI(phi_ty_109, 3, "");
   auto *instr_109 = phi_109;
   /*
@@ -698,21 +698,21 @@ void foo(LLVMContext &Ctx, Module &M) {
   */
   builder.SetInsertPoint(bb_20);
   auto *op_0_113 = instr_112;
-  auto *op_1_113 = bb_16;
-  auto *op_2_113 = bb_26;
+  auto *op_1_113 = bb_26;
+  auto *op_2_113 = bb_16;
   auto *instr_113 = builder.CreateCondBr(op_0_113, op_1_113, op_2_113);
   /*
     %57 = phi i32 [ %51, %50 ], [ %76, %74 ]
   */
   builder.SetInsertPoint(bb_21);
-  auto *phi_ty_114 = type_0x000000002F7F9548;
+  auto *phi_ty_114 = type_0x0000000009440548;
   auto *phi_114 = builder.CreatePHI(phi_ty_114, 2, "");
   auto *instr_114 = phi_114;
   /*
     %58 = phi i32 [ %52, %50 ], [ %75, %74 ]
   */
   builder.SetInsertPoint(bb_21);
-  auto *phi_ty_115 = type_0x000000002F7F9548;
+  auto *phi_ty_115 = type_0x0000000009440548;
   auto *phi_115 = builder.CreatePHI(phi_ty_115, 2, "");
   auto *instr_115 = phi_115;
   /*
@@ -729,13 +729,13 @@ void foo(LLVMContext &Ctx, Module &M) {
   builder.SetInsertPoint(bb_21);
   auto op_0_117 = Instruction::CastOps::ZExt;
   auto *op_1_117 = instr_116;
-  auto *op_2_117 = type_0x000000002F7F9560;
+  auto *op_2_117 = type_0x0000000009440560;
   auto *instr_117 = builder.CreateCast(op_0_117, op_1_117, op_2_117);
   /*
     %61 = getelementptr [92 x i8], ptr %1, i64 %44, i64 %60
   */
   builder.SetInsertPoint(bb_21);
-  auto *op_0_118 = type_0x000000002F7FDE50;
+  auto *op_0_118 = type_0x0000000009444E50;
   auto *op_1_118 = instr_46;
   std::vector<Value *> op_2_118;
   auto *op_3_118 = instr_101;
@@ -747,7 +747,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %62 = load i8, ptr %61, align 1, !tbaa !4
   */
   builder.SetInsertPoint(bb_21);
-  auto *op_0_119 = type_0x000000002F7F9518;
+  auto *op_0_119 = type_0x0000000009440518;
   auto *op_1_119 = instr_118;
   auto *instr_119 = builder.CreateLoad(op_0_119, op_1_119);
   /*
@@ -788,7 +788,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %66 = phi i32 [ %64, %63 ], [ %58, %56 ]
   */
   builder.SetInsertPoint(bb_23);
-  auto *phi_ty_123 = type_0x000000002F7F9548;
+  auto *phi_ty_123 = type_0x0000000009440548;
   auto *phi_123 = builder.CreatePHI(phi_ty_123, 2, "");
   auto *instr_123 = phi_123;
   /*
@@ -813,13 +813,13 @@ void foo(LLVMContext &Ctx, Module &M) {
   builder.SetInsertPoint(bb_23);
   auto op_0_126 = Instruction::CastOps::ZExt;
   auto *op_1_126 = instr_125;
-  auto *op_2_126 = type_0x000000002F7F9560;
+  auto *op_2_126 = type_0x0000000009440560;
   auto *instr_126 = builder.CreateCast(op_0_126, op_1_126, op_2_126);
   /*
     %70 = getelementptr [92 x i8], ptr %1, i64 %44, i64 %69
   */
   builder.SetInsertPoint(bb_23);
-  auto *op_0_127 = type_0x000000002F7FDE50;
+  auto *op_0_127 = type_0x0000000009444E50;
   auto *op_1_127 = instr_46;
   std::vector<Value *> op_2_127;
   auto *op_3_127 = instr_101;
@@ -831,7 +831,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %71 = load i8, ptr %70, align 1, !tbaa !4
   */
   builder.SetInsertPoint(bb_23);
-  auto *op_0_128 = type_0x000000002F7F9518;
+  auto *op_0_128 = type_0x0000000009440518;
   auto *op_1_128 = instr_127;
   auto *instr_128 = builder.CreateLoad(op_0_128, op_1_128);
   /*
@@ -872,7 +872,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %75 = phi i32 [ %73, %72 ], [ %66, %65 ]
   */
   builder.SetInsertPoint(bb_25);
-  auto *phi_ty_132 = type_0x000000002F7F9548;
+  auto *phi_ty_132 = type_0x0000000009440548;
   auto *phi_132 = builder.CreatePHI(phi_ty_132, 2, "");
   auto *instr_132 = phi_132;
   /*
@@ -896,14 +896,14 @@ void foo(LLVMContext &Ctx, Module &M) {
   */
   builder.SetInsertPoint(bb_25);
   auto *op_0_135 = instr_134;
-  auto *op_1_135 = bb_21;
-  auto *op_2_135 = bb_20;
+  auto *op_1_135 = bb_20;
+  auto *op_2_135 = bb_21;
   auto *instr_135 = builder.CreateCondBr(op_0_135, op_1_135, op_2_135);
   /*
     %79 = getelementptr [92 x i8], ptr %1, i64 %17, i64 %27
   */
   builder.SetInsertPoint(bb_26);
-  auto *op_0_136 = type_0x000000002F7FDE50;
+  auto *op_0_136 = type_0x0000000009444E50;
   auto *op_1_136 = instr_46;
   std::vector<Value *> op_2_136;
   auto *op_3_136 = instr_74;
@@ -915,7 +915,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %80 = load i8, ptr %79, align 1, !tbaa !4
   */
   builder.SetInsertPoint(bb_26);
-  auto *op_0_137 = type_0x000000002F7F9518;
+  auto *op_0_137 = type_0x0000000009440518;
   auto *op_1_137 = instr_136;
   auto *instr_137 = builder.CreateLoad(op_0_137, op_1_137);
   /*
@@ -932,7 +932,7 @@ void foo(LLVMContext &Ctx, Module &M) {
   builder.SetInsertPoint(bb_26);
   auto op_0_139 = Instruction::CastOps::SExt;
   auto *op_1_139 = instr_138;
-  auto *op_2_139 = type_0x000000002F7F9548;
+  auto *op_2_139 = type_0x0000000009440548;
   auto *instr_139 = builder.CreateCast(op_0_139, op_1_139, op_2_139);
   /*
     %83 = add i32 %75, %82
@@ -982,8 +982,8 @@ void foo(LLVMContext &Ctx, Module &M) {
   */
   builder.SetInsertPoint(bb_27);
   auto *op_0_144 = instr_143;
-  auto *op_1_144 = bb_30;
-  auto *op_2_144 = bb_29;
+  auto *op_1_144 = bb_29;
+  auto *op_2_144 = bb_30;
   auto *instr_144 = builder.CreateCondBr(op_0_144, op_1_144, op_2_144);
   /*
     switch i32 %83, label %90 [
@@ -1010,7 +1010,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %89 = phi i8 [ 3, %84 ], [ 2, %87 ], [ 2, %87 ]
   */
   builder.SetInsertPoint(bb_29);
-  auto *phi_ty_146 = type_0x000000002F7F9518;
+  auto *phi_ty_146 = type_0x0000000009440518;
   auto *phi_146 = builder.CreatePHI(phi_ty_146, 3, "");
   auto *instr_146 = phi_146;
   /*
@@ -1048,14 +1048,14 @@ void foo(LLVMContext &Ctx, Module &M) {
   */
   builder.SetInsertPoint(bb_30);
   auto *op_0_151 = instr_150;
-  auto *op_1_151 = bb_15;
-  auto *op_2_151 = bb_14;
+  auto *op_1_151 = bb_14;
+  auto *op_2_151 = bb_15;
   auto *instr_151 = builder.CreateCondBr(op_0_151, op_1_151, op_2_151);
   /*
     %94 = phi i64 [ %96, %95 ], [ 0, %23 ]
   */
   builder.SetInsertPoint(bb_31);
-  auto *phi_ty_152 = type_0x000000002F7F9560;
+  auto *phi_ty_152 = type_0x0000000009440560;
   auto *phi_152 = builder.CreatePHI(phi_ty_152, 2, "");
   auto *instr_152 = phi_152;
   /*
@@ -1086,21 +1086,21 @@ void foo(LLVMContext &Ctx, Module &M) {
   */
   builder.SetInsertPoint(bb_32);
   auto *op_0_156 = instr_155;
-  auto *op_1_156 = bb_31;
-  auto *op_2_156 = bb_40;
+  auto *op_1_156 = bb_40;
+  auto *op_2_156 = bb_31;
   auto *instr_156 = builder.CreateCondBr(op_0_156, op_1_156, op_2_156);
   /*
     %99 = phi i64 [ 0, %93 ], [ %113, %112 ]
   */
   builder.SetInsertPoint(bb_33);
-  auto *phi_ty_157 = type_0x000000002F7F9560;
+  auto *phi_ty_157 = type_0x0000000009440560;
   auto *phi_157 = builder.CreatePHI(phi_ty_157, 2, "");
   auto *instr_157 = phi_157;
   /*
     %100 = getelementptr [92 x i8], ptr %1, i64 %94, i64 %99
   */
   builder.SetInsertPoint(bb_33);
-  auto *op_0_158 = type_0x000000002F7FDE50;
+  auto *op_0_158 = type_0x0000000009444E50;
   auto *op_1_158 = instr_46;
   std::vector<Value *> op_2_158;
   auto *op_3_158 = instr_152;
@@ -1112,7 +1112,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %101 = load i8, ptr %100, align 2, !tbaa !4
   */
   builder.SetInsertPoint(bb_33);
-  auto *op_0_159 = type_0x000000002F7F9518;
+  auto *op_0_159 = type_0x0000000009440518;
   auto *op_1_159 = instr_158;
   auto *instr_159 = builder.CreateLoad(op_0_159, op_1_159);
   /*
@@ -1146,7 +1146,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %104 = phi i8 [ 0, %102 ], [ 1, %98 ]
   */
   builder.SetInsertPoint(bb_35);
-  auto *phi_ty_162 = type_0x000000002F7F9518;
+  auto *phi_ty_162 = type_0x0000000009440518;
   auto *phi_162 = builder.CreatePHI(phi_ty_162, 2, "");
   auto *instr_162 = phi_162;
   /*
@@ -1174,7 +1174,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %107 = getelementptr [92 x i8], ptr %1, i64 %94, i64 %106
   */
   builder.SetInsertPoint(bb_36);
-  auto *op_0_166 = type_0x000000002F7FDE50;
+  auto *op_0_166 = type_0x0000000009444E50;
   auto *op_1_166 = instr_46;
   std::vector<Value *> op_2_166;
   auto *op_3_166 = instr_152;
@@ -1186,7 +1186,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %108 = load i8, ptr %107, align 1, !tbaa !4
   */
   builder.SetInsertPoint(bb_36);
-  auto *op_0_167 = type_0x000000002F7F9518;
+  auto *op_0_167 = type_0x0000000009440518;
   auto *op_1_167 = instr_166;
   auto *instr_167 = builder.CreateLoad(op_0_167, op_1_167);
   /*
@@ -1220,7 +1220,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %111 = phi i8 [ 0, %109 ], [ 1, %105 ]
   */
   builder.SetInsertPoint(bb_38);
-  auto *phi_ty_170 = type_0x000000002F7F9518;
+  auto *phi_ty_170 = type_0x0000000009440518;
   auto *phi_170 = builder.CreatePHI(phi_ty_170, 2, "");
   auto *instr_170 = phi_170;
   /*
@@ -1258,8 +1258,8 @@ void foo(LLVMContext &Ctx, Module &M) {
   */
   builder.SetInsertPoint(bb_39);
   auto *op_0_175 = instr_174;
-  auto *op_1_175 = bb_33;
-  auto *op_2_175 = bb_32;
+  auto *op_1_175 = bb_32;
+  auto *op_2_175 = bb_33;
   auto *instr_175 = builder.CreateCondBr(op_0_175, op_1_175, op_2_175);
   /*
     %116 = add nuw nsw i32 %9, 1
@@ -1283,8 +1283,8 @@ void foo(LLVMContext &Ctx, Module &M) {
   */
   builder.SetInsertPoint(bb_40);
   auto *op_0_178 = instr_177;
-  auto *op_1_178 = bb_9;
-  auto *op_2_178 = bb_10;
+  auto *op_1_178 = bb_10;
+  auto *op_2_178 = bb_9;
   auto *instr_178 = builder.CreateCondBr(op_0_178, op_1_178, op_2_178);
   /*
     %119 = add nuw nsw i64 %12, 1
@@ -1308,21 +1308,21 @@ void foo(LLVMContext &Ctx, Module &M) {
   */
   builder.SetInsertPoint(bb_41);
   auto *op_0_181 = instr_180;
-  auto *op_1_181 = bb_11;
-  auto *op_2_181 = bb_12;
+  auto *op_1_181 = bb_12;
+  auto *op_2_181 = bb_11;
   auto *instr_181 = builder.CreateCondBr(op_0_181, op_1_181, op_2_181);
   /*
     %122 = phi i64 [ 0, %11 ], [ %130, %129 ]
   */
   builder.SetInsertPoint(bb_42);
-  auto *phi_ty_182 = type_0x000000002F7F9560;
+  auto *phi_ty_182 = type_0x0000000009440560;
   auto *phi_182 = builder.CreatePHI(phi_ty_182, 2, "");
   auto *instr_182 = phi_182;
   /*
     %123 = getelementptr [92 x [92 x i8]], ptr %1, i64 0, i64 %12, i64 %122
   */
   builder.SetInsertPoint(bb_42);
-  auto *op_0_183 = type_0x000000002F7FDE80;
+  auto *op_0_183 = type_0x0000000009444E80;
   auto *op_1_183 = instr_46;
   std::vector<Value *> op_2_183;
   auto *op_3_183 = ConstantInt::get(Ctx, APInt(64, 0));
@@ -1336,7 +1336,7 @@ void foo(LLVMContext &Ctx, Module &M) {
     %124 = load i8, ptr %123, align 1, !tbaa !4
   */
   builder.SetInsertPoint(bb_42);
-  auto *op_0_184 = type_0x000000002F7F9518;
+  auto *op_0_184 = type_0x0000000009440518;
   auto *op_1_184 = instr_183;
   auto *instr_184 = builder.CreateLoad(op_0_184, op_1_184);
   /*
@@ -1353,15 +1353,15 @@ void foo(LLVMContext &Ctx, Module &M) {
   builder.SetInsertPoint(bb_42);
   auto op_0_186 = Instruction::CastOps::Trunc;
   auto *op_1_186 = instr_182;
-  auto *op_2_186 = type_0x000000002F7F9548;
+  auto *op_2_186 = type_0x0000000009440548;
   auto *instr_186 = builder.CreateCast(op_0_186, op_1_186, op_2_186);
   /*
     br i1 %125, label %127, label %128
   */
   builder.SetInsertPoint(bb_42);
   auto *op_0_187 = instr_185;
-  auto *op_1_187 = bb_44;
-  auto *op_2_187 = bb_43;
+  auto *op_1_187 = bb_43;
+  auto *op_2_187 = bb_44;
   auto *instr_187 = builder.CreateCondBr(op_0_187, op_1_187, op_2_187);
   /*
     tail call void @put_cell(i32 noundef %14, i32 noundef %126, i32 noundef
@@ -1427,8 +1427,8 @@ void foo(LLVMContext &Ctx, Module &M) {
   */
   builder.SetInsertPoint(bb_45);
   auto *op_0_194 = instr_193;
-  auto *op_1_194 = bb_42;
-  auto *op_2_194 = bb_41;
+  auto *op_1_194 = bb_41;
+  auto *op_2_194 = bb_42;
   auto *instr_194 = builder.CreateCondBr(op_0_194, op_1_194, op_2_194);
   builder.SetInsertPoint(dyn_cast<Instruction>(instr_183));
   auto *op_0_182 = ConstantInt::get(Ctx, APInt(64, 0));

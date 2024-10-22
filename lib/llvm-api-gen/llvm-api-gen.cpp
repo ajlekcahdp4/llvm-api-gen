@@ -235,6 +235,7 @@ bool requires_special_handling(const Instruction &instr) {
   case Instruction::Switch:
   case Instruction::Add:
   case Instruction::Sub:
+  case Instruction::Br:
     return true;
   default:
     return false;
@@ -484,6 +485,21 @@ void generate_special_instr(const Instruction &instr, raw_ostream &os,
     generate_call_create_instr(instr, os, ctx, idx);
     return;
   }
+  if (auto *br = dyn_cast<BranchInst>(&instr)) {
+    unsigned idx = 0;
+    if (br->isConditional()) {
+      auto *cond = br->getCondition();
+      create_operand(*cond, instr, idx++, os, ctx);
+    }
+    auto *if_true = br->getSuccessor(0);
+    create_operand(*if_true, instr, idx++, os, ctx);
+    if (br->isConditional()) {
+      auto *if_false = br->getSuccessor(1);
+      create_operand(*if_false, instr, idx++, os, ctx);
+    }
+    generate_call_create_instr(instr, os, ctx, idx);
+    return;
+  }
   llvm_unreachable("unknown special instr");
 }
 
@@ -562,6 +578,36 @@ void create_func(const Function &f, raw_ostream &os, generation_context &ctx) {
   os << create_func_str(f, ctx);
 }
 
+#define CASE_CONST(name)                                                       \
+  if (auto *_ = dyn_cast<name>(&c))                                            \
+    return #name;
+
+std::string get_constant_type_name(const Constant &c) {
+  CASE_CONST(ConstantInt)
+  CASE_CONST(ConstantArray)
+  llvm_unreachable("unsipported constant type encountered");
+}
+#undef CASE_CONST
+
+void create_global(const GlobalVariable &global_var, raw_ostream &os,
+                   generation_context &ctx) {
+  auto *type = global_var.getType();
+  os << get_type_str(*type, "Ctx", ctx);
+  os << formatv(
+      "auto *global_var_{0} = "
+      "dyn_cast<GlobalVariable>(M.getOrInsertGlobal({1}, type_{2}));\n",
+      ctx.get_value_idx(global_var), global_var.getName(), type);
+  os << formatv("assert(global_var_{0});\n", ctx.get_value_idx(global_var));
+  create_operand(global_var, global_var, 0, os, ctx);
+  os << formatv("global_var_{0}->setInitializer(op_0_{0});\n",
+                ctx.get_value_idx(global_var));
+}
+
+void create_globals(const Module &m, raw_ostream &os, generation_context &ctx) {
+  for (auto &global_var : m.globals())
+    create_global(global_var, os, ctx);
+}
+
 PreservedAnalyses api_gen_pass::run(Module &m, ModuleAnalysisManager &) {
   generation_context ctx;
   std::unordered_set<const Function *> visited;
@@ -591,6 +637,7 @@ PreservedAnalyses api_gen_pass::run(Module &m, ModuleAnalysisManager &) {
       assert(inserted);
     }
   }
+  create_globals(m, os, ctx);
 
   return PreservedAnalyses::all();
 }
